@@ -1,8 +1,8 @@
-import React, { useRef } from 'react'
+import React from 'react'
 import { useGLTF } from '@react-three/drei'
 import SlotCard from './SlotCard'
 
-const SLOT_Y_OFFSETS = [9.7, 6.4, 3.1]
+const SLOT_Y_OFFSETS = [9.7, 6.5, 3.1]
 const CARD_Z_OFFSET = 0.3
 
 export default function Rack({ position, rackId, slots, dataRef }) {

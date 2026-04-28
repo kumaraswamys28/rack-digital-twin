@@ -1,6 +1,6 @@
-import React, { useRef, useCallback, Suspense } from 'react'
-import { Canvas } from '@react-three/fiber'
-import { OrbitControls, Environment, Grid } from '@react-three/drei'
+import React, { useRef, useCallback, Suspense, useState, useEffect } from 'react'
+import { Canvas, useThree } from '@react-three/fiber'
+import { OrbitControls, Environment, Grid, useGLTF } from '@react-three/drei'
 import Rack from './Rack'
 import { useTelemetry } from './useTelemetry'
 
@@ -95,7 +95,7 @@ export default function App() {
         </div>
         <div style={{ textAlign: 'right' }}>
           <div style={{ color: '#556677', fontSize: 11 }}>3 RACKS · 9 SLOTS</div>
-          <div style={{ color: '#8899aa', fontSize: 10, marginTop: 2 }}>Polling every 2s</div>
+          <div style={{ color: '#8899aa', fontSize: 10, marginTop: 2 }}>Polling every 4s</div>
         </div>
       </div>
 
@@ -116,7 +116,10 @@ export default function App() {
         fontFamily: "'Space Mono', monospace", color: '#aabbcc', fontSize: 10,
         textAlign: 'right', lineHeight: 1.8,
       }}>
-        Drag to orbit · Scroll to zoom
+        Drag to orbit · Scroll to zoom<br />
+        <a href="https://github.com/kumaraswamys28" target="_blank" rel="noopener noreferrer" style={{ color: '#aabbcc', textDecoration: 'none', fontSize: 10, lineHeight: 1.8 }}>
+          made by kumar
+        </a>
       </div>
 
       <Canvas
