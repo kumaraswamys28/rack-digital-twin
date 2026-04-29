@@ -117,8 +117,8 @@ export default function App() {
         textAlign: 'right', lineHeight: 1.8,
       }}>
         Drag to orbit · Scroll to zoom<br />
-        <a href="https://github.com/kumaraswamys28" target="_blank" rel="noopener noreferrer" style={{ color: '#aabbcc', textDecoration: 'none', fontSize: 500, lineHeight: 1.8 }}>
-          made by Tantravruksha
+        <a href="https://github.com/kumaraswamys28" target="_blank" rel="noopener noreferrer" style={{ color: '#aabbcc', textDecoration: 'none', fontSize: 10, lineHeight: 1.8 }}>
+          made by kumar
         </a>
       </div>
 
