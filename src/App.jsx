@@ -118,7 +118,7 @@ export default function App() {
       }}>
         Drag to orbit · Scroll to zoom<br />
         <a href="https://github.com/kumaraswamys28" target="_blank" rel="noopener noreferrer" style={{ color: '#aabbcc', textDecoration: 'none', fontSize: 50, lineHeight: 1.8 }}>
-          made by Madhu sir
+          made by Tantravruksha
         </a>
       </div>
 
