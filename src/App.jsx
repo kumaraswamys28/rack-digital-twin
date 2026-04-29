@@ -11,7 +11,7 @@ const RACK_CONFIGS = [
 ]
 
 function emptySlot(rackId, slotId) {
-  return { rack_id: rackId, slot_id: slotId, ingredient: 'Loading...', weight_grams: 0, status: 'EMPTY', metadata: { temp: '--', humidity: '--' }, owner_id: '—' }
+  return { rack_id: rackId, slot_id: slotId, ingredient: 'Loading...', weight_grams: 0, status: 'EMPTY', owner_id: '—' }
 }
 
 const initialSlots = {
