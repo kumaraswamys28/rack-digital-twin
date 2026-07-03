@@ -1,64 +1,46 @@
-import React, { useRef, useCallback, Suspense, useState, useEffect } from 'react'
-import { Canvas, useThree } from '@react-three/fiber'
-import { OrbitControls, Environment, Grid, useGLTF } from '@react-three/drei'
+import React, { useCallback, Suspense, useState } from 'react'
+import { Canvas } from '@react-three/fiber'
+import { OrbitControls, Environment, Grid } from '@react-three/drei'
 import Rack from './Rack'
 import { useTelemetry } from './useTelemetry'
 
-function emptySlot(rackId, slotId) {
-  return { rack_id: rackId, slot_id: slotId, ingredient: '0', weight_grams: 0, status: 'EMPTY', owner_id: '—' }
-}
+const SLOTS_PER_RACK = 3
+const TOTAL_RACKS = 3
+const TOTAL_SLOTS = TOTAL_RACKS * SLOTS_PER_RACK // always 9
+const RACK_SPACING = 6.5
 
-const SLOT_COUNT = 3
-
-const RACK_CONFIGS = [
-  { rackId: 'RACK_A1', position: [-6.5, 0, 0] },
-  { rackId: 'RACK_A2', position: [0, 0, 0] },
-  { rackId: 'RACK_B1', position: [6.5, 0, 0] },
+const RACK_POSITIONS = [
+  [-RACK_SPACING, 0, 0],
+  [0,             0, 0],
+  [RACK_SPACING,  0, 0],
 ]
 
-const INITIAL_SLOTS = {
-  'RACK_A1': [emptySlot('RACK_A1', 1), emptySlot('RACK_A1', 2), emptySlot('RACK_A1', 3)],
-  'RACK_A2': [emptySlot('RACK_A2', 1), emptySlot('RACK_A2', 2), emptySlot('RACK_A2', 3)],
-  'RACK_B1': [emptySlot('RACK_B1', 1), emptySlot('RACK_B1', 2), emptySlot('RACK_B1', 3)],
+function emptySlot() {
+  return { _empty: true, device_name: null, ingredient: null, weight_grams: 0, status: 'EMPTY', owner_id: null, metadata: {} }
 }
 
-function buildRackSlots(rackId, slotDataByKey) {
-  return Array.from({ length: SLOT_COUNT }, (_, index) => {
-    const slotId = index + 1
-    const slotKey = `${rackId}:${slotId}`
-    return slotDataByKey[slotKey] ?? emptySlot(rackId, slotId)
-  })
+// Fill a fixed 9-slot grid with real device data; rest are empty placeholders
+function buildFixedGrid(devices) {
+  const grid = Array.from({ length: TOTAL_SLOTS }, (_, i) => devices[i] ?? emptySlot())
+  // Split into 3 racks of 3
+  return [
+    grid.slice(0, 3),
+    grid.slice(3, 6),
+    grid.slice(6, 9),
+  ]
 }
 
-function getRackPosition(index, rackCount) {
-  if (rackCount <= 1) return [0, 0, 0]
-  if (rackCount === 2) return index === 0 ? [-4.2, 0, 0] : [4.2, 0, 0]
+function Scene({ onDeviceCount }) {
+  const [devices, setDevices] = useState([])
 
-  const centeredOffsets = [-1, 0, 1]
-  return [centeredOffsets[index] * 6.5, 0, 0]
-}
+  const handleUpdate = useCallback((data) => {
+    setDevices(data)
+    onDeviceCount(data.length)
+  }, [onDeviceCount])
 
-function Scene() {
-  const [slotDataByKey, setSlotDataByKey] = useState(() => ({
-    'RACK_A1:1': emptySlot('RACK_A1', 1),
-    'RACK_A1:2': emptySlot('RACK_A1', 2),
-    'RACK_A1:3': emptySlot('RACK_A1', 3),
-    'RACK_A2:1': emptySlot('RACK_A2', 1),
-    'RACK_A2:2': emptySlot('RACK_A2', 2),
-    'RACK_A2:3': emptySlot('RACK_A2', 3),
-    'RACK_B1:1': emptySlot('RACK_B1', 1),
-    'RACK_B1:2': emptySlot('RACK_B1', 2),
-    'RACK_B1:3': emptySlot('RACK_B1', 3),
-  }))
+  useTelemetry(handleUpdate)
 
-  const handleSlotUpdate = useCallback((slotKey, data) => {
-    setSlotDataByKey((prev) => ({
-      ...prev,
-      [slotKey]: data,
-    }))
-  }, [])
-
-  useTelemetry(handleSlotUpdate)
+  const racks = buildFixedGrid(devices)
 
   return (
     <>
@@ -82,13 +64,12 @@ function Scene() {
         followCamera={false}
       />
 
-      {RACK_CONFIGS.map(({ rackId, position }) => (
+      {racks.map((slots, rackIndex) => (
         <Rack
-          key={rackId}
-          rackId={rackId}
-          position={position}
-          slots={INITIAL_SLOTS[rackId]}
-          slotDataByKey={slotDataByKey}
+          key={rackIndex}
+          rackIndex={rackIndex}
+          position={RACK_POSITIONS[rackIndex]}
+          slots={slots}
         />
       ))}
 
@@ -106,7 +87,9 @@ function Scene() {
 }
 
 export default function App() {
-  const rackCount = 3
+  const [deviceCount, setDeviceCount] = useState(0)
+
+  const handleDeviceCount = useCallback((count) => setDeviceCount(count), [])
 
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
@@ -116,6 +99,7 @@ export default function App() {
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         background: 'linear-gradient(to bottom, #f5f2eeee, transparent)',
         fontFamily: "'Space Mono', monospace",
+        pointerEvents: 'none',
       }}>
         <div>
           <div style={{ color: '#00aa66', fontSize: 11, letterSpacing: 4, textTransform: 'uppercase', marginBottom: 2 }}>
@@ -126,14 +110,17 @@ export default function App() {
           </div>
         </div>
         <div style={{ textAlign: 'right' }}>
-          <div style={{ color: '#556677', fontSize: 11 }}>{rackCount} RACKS · {rackCount * SLOT_COUNT} SLOTS</div>
-          <div style={{ color: '#8899aa', fontSize: 10, marginTop: 2 }}>Polling every 10s</div>
+          <div style={{ color: '#556677', fontSize: 11 }}>
+            {TOTAL_RACKS} RACKS · {deviceCount}/{TOTAL_SLOTS} ACTIVE
+          </div>
+          <div style={{ color: '#8899aa', fontSize: 10, marginTop: 2 }}>Polling every 2s</div>
         </div>
       </div>
 
       <div style={{
         position: 'absolute', bottom: 24, left: 24, zIndex: 10,
         display: 'flex', gap: 16, fontFamily: "'Space Mono', monospace",
+        pointerEvents: 'none',
       }}>
         {[['ACTIVE', '#00aa66'], ['LOW_STOCK', '#cc8800'], ['EMPTY', '#cc3355']].map(([label, color]) => (
           <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -146,12 +133,9 @@ export default function App() {
       <div style={{
         position: 'absolute', bottom: 24, right: 24, zIndex: 10,
         fontFamily: "'Space Mono', monospace", color: '#aabbcc', fontSize: 10,
-        textAlign: 'right', lineHeight: 1.8,
+        textAlign: 'right', lineHeight: 1.8, pointerEvents: 'none',
       }}>
-        Drag to orbit · Scroll to zoom<br />
-        <a href="https://github.com/kumaraswamys28" target="_blank" rel="noopener noreferrer" style={{ color: '#aabbcc', textDecoration: 'none', fontSize: 10, lineHeight: 1.8 }}>
-          
-        </a>
+        Drag to orbit · Scroll to zoom
       </div>
 
       <Canvas
@@ -161,7 +145,7 @@ export default function App() {
         style={{ background: '#f5f2eb' }}
       >
         <Suspense fallback={null}>
-          <Scene />
+          <Scene onDeviceCount={handleDeviceCount} />
         </Suspense>
       </Canvas>
     </div>
